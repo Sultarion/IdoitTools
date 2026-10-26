@@ -1,55 +1,39 @@
-//low kirkentually have no idea what to put in here
-const apikeyfield = document.getElementById("Apikey");
+const apikeyfield = document.getElementById("Apikeyfield");
 const apikeybutton = document.getElementById("Apikeybutton");
-const apireturn = document.getElementById("Apikeyresult");
-let apikey = "";
+const apireturn = document.getElementById("errorfield");
+import { apirequest } from "./exports.js";
 
-if (apikeyfield) {
-    apikeyfield.value = localStorage.getItem("apikey") || "";
-}
-
-//
-apikeybutton?.addEventListener("click",() => {
-    apikey = apikeyfield.value;
-    if (apikey === "" || !(apikey.length == 16)){
-        localStorage.removeItem("apikey");
+apikeybutton?.addEventListener("click", async() =>{
+    let apikey = apikeyfield.value;
+    localStorage.setItem("apikey",apikey)
+    try{
+        let check_key = await apirequest('user/basic');
         apireturn.style.color = "red";
-        apireturn.textContent = "Invalid API Key, please enter a valid key";
-    } else {
-        console.log("Api key entered");
-        localStorage.setItem("apikey", apikey);
-        if (apireturn){
-            apireturn.style.color = "green";
-            apireturn.textContent = "Entered hopefully valid API Key"
-        };
+        switch (true) {
+            case(check_key == null):
+                console.log("Error occured with api request")
+                localStorage.removeItem("apikey");
+                apireturn.textContent = "Error with API request"
+                break;
+            case(check_key?.error?.code == 2):
+                console.log("Error occured with api key check")
+                localStorage.removeItem("apikey") // prob not nessicary, here just in case
+                apireturn.textContent = "Invalid Api key, Please try again"
+                break;
+            case(check_key?.error?.code !== undefined):
+                console.log("Unknown error occured");
+                localStorage.removeItem("apikey");
+                apireturn.textContent = `Unknown error occured, error code ${check_key.error.code}`
+                break;
+            default:
+                apireturn.style.color = "green";
+                apireturn.textContent = "Successfuly inputted (hopefully) valid api key";
+        }  
+        console.log("finished");
 
+    } catch(err){
+        localStorage.removeItem("apikey")
+        console.error(`Error occured ${err}`);
+    }
 
-    };
-
-});
-
-/*
-MAKE SEPRATE FILE LATER SO WE DON'T RELOAD PREVIOUS CODE EVERYTIME WE CALL API REQUEST (remove error handling in previous code too so we don't have unessicary shit)
-file exports
-*/
-
-export async function apirequest(middleurl) {
-    const url = `https://api.torn.com/v2/${middleurl}?comment=IT:Personal Script test`;
-    console.log("Urlreq:",url);
-    try {
-        const response = await fetch(url, {headers: {
-            "Authorization": `ApiKey ${localStorage.getItem("apikey")}`,
-            "Accept": "application/json"    
-        }})
-
-        if (!response.ok){
-            console.error("api request error", response.status);
-            return null;
-        };
-        return await JSON.parse(await response.text());
-    } catch(error){
-        console.error('request error',error);
-        return null;
-    };
-};
-
+})
