@@ -1,6 +1,7 @@
-export async function apirequest(middleurl) {
-    const url = `https://api.torn.com/v2/${middleurl}?comment=IT:Personal Script test`;
-    console.log("Urlreq:",url);
+export async function apirequest(middleurl, comment = 'Personal_script_test') {
+    const url = `https://api.torn.com/v2/${middleurl}?comment=IT:${comment}`;
+    console.log("Running Imported function api request Urlreq:");
+    console.log(url);
     try {
         const response = await fetch(url, {headers: {
             "Authorization": `ApiKey ${localStorage.getItem("apikey")}`,
